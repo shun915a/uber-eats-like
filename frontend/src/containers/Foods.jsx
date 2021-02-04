@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { LocalMallIcon } from '../components/Icons';
 import { FoodWrapper } from '../components/FoodWrapper';
 import Skeleton from '@material-ui/lab/Skeleton';
+import { FoodOrderDialog } from '../components/FoodOrderDialog';
 
 // reducers
 import {
@@ -48,7 +49,7 @@ const FoodsList = styled.div`
   display: flex;
   justify-content: space-around;
   flex-wrap: wrap;
-  margin-bottom: 50px
+  margin-bottom: 50px;
 `;
 
 const ItemWrapper = styled.div`
@@ -78,7 +79,7 @@ export const Foods = ({
           }
         });
       })
-  }, [])
+  }, []);
 
   return (
     <Fragment>
@@ -99,7 +100,7 @@ export const Foods = ({
               {
                 [...Array(12).keys()].map(i =>
                   <ItemWrapper key={i}>
-                    <Skeleton key={i} variant="rect" width={450}  height={180} />
+                    <Skeleton key={i} variant="rect" width={450} height={180} />
                   </ItemWrapper>
                 )
               }
@@ -112,8 +113,8 @@ export const Foods = ({
                 onClickFoodWrapper={
                   (food) => setState({
                     ...state,
-                    isOpenOrderDialog: true,
                     selectedFood: food,
+                    isOpenOrderDialog: true,
                   })
                 }
                 imageUrl={FoodImage}
@@ -122,6 +123,17 @@ export const Foods = ({
           )
         }
       </FoodsList>
+      {
+        state.isOpenOrderDialog &&
+          <FoodOrderDialog
+            food={state.selectedFood}
+            isOpen={state.isOpenOrderDialog}
+            onClose={() => setState({
+              ...state,
+              isOpenOrderDialog: false,
+            })}
+          />
+      }
     </Fragment>
   )
 }
