@@ -59,16 +59,10 @@ const ItemWrapper = styled.div`
   margin: 16px;
 `;
 
-const submitOrder = () => {
-  console.log("登録ボタンが押された！")
-}
-
 export const Foods = ({
   match
 }) => {
-  const history = useHistory();
-  const [foodsState, dispatch] = useReducer(foodsReducer, foodsInitialState);
-
+  
   const initialState = {
     isOpenOrderDialog: false,
     selectedFood: null,
@@ -77,6 +71,9 @@ export const Foods = ({
     existingRestaurantName: '',
     newRestaurantName: '',
   };
+  
+  const history = useHistory();
+  const [foodsState, dispatch] = useReducer(foodsReducer, foodsInitialState);
   const [state, setState] = useState(initialState);
 
   useEffect(() => {
@@ -110,6 +107,13 @@ export const Foods = ({
         throw e;
       }
     })
+  };
+
+  const replaceOrder = () => {
+    replaceLineFoods({
+      foodId: state.selectedFood.id,
+      count: state.selectedFoodCount,
+    }).then(() => history.push('/orders'))
   };
 
   return (
