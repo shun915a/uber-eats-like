@@ -1,6 +1,9 @@
 import React, { Fragment, useEffect, useReducer, useState } from 'react';
 import styled from 'styled-components';
-import { Link } from 'react-router-dom';
+import { useHistory, Link } from 'react-router-dom';
+import {NewOrderConfirmDialog} from '../components/NewOrderConfirmDialog';
+import { postLineFoods, replaceLineFoods } from '../apis/line_foods';
+import { HTTP_STATUS_CODE } from '../constants';
 
 
 // components
@@ -56,16 +59,24 @@ const ItemWrapper = styled.div`
   margin: 16px;
 `;
 
+const submitOrder = () => {
+  console.log("登録ボタンが押された！")
+}
+
 export const Foods = ({
   match
 }) => {
+  const history = useHistory();
   const [foodsState, dispatch] = useReducer(foodsReducer, foodsInitialState);
 
   const initialState = {
     isOpenOrderDialog: false,
     selectedFood: null,
     selectedFoodCount: 1,
-  }
+    isOpenNewOrderDialog: false,
+    existingRestaurantName: '',
+    newRestaurantName: '',
+  };
   const [state, setState] = useState(initialState);
 
   useEffect(() => {
@@ -80,6 +91,26 @@ export const Foods = ({
         });
       })
   }, []);
+
+  const submitOrder = () => {
+    postLineFoods({
+      foodId: state.selectedFood.id,
+      count: state.selectedFoodCount,
+    }).then(() => history.push('/orders'))
+    .catch((e) => {
+      if (e.response.status === HTTP_STATUS_CODE.NOT_ACCEPTABLE) {
+        setState({
+          ...state,
+          isOpenOrderDialog: false,
+          isOpenNewOrderDialog: true,
+          existingRestaurantName: e.response.data.existing_restaurant,
+          newRestaurantName: e.response.data.new_restaurant,
+        })
+      } else {
+        throw e;
+      }
+    })
+  };
 
   return (
     <Fragment>
@@ -126,13 +157,37 @@ export const Foods = ({
       {
         state.isOpenOrderDialog &&
           <FoodOrderDialog
-            food={state.selectedFood}
             isOpen={state.isOpenOrderDialog}
+            food={state.selectedFood}
+            countNumber={state.selectedFoodCount}
+            onClickCountUp={() => setState({
+              ...state,
+              selectedFoodCount: state.selectedFoodCount + 1,
+            })}
+            onClickCountDown={() => setState({
+              ...state,
+              selectedFoodCount: state.selectedFoodCount - 1,
+            })}
+            onClickOrder={() => submitOrder()}
+            // モーダルを閉じるときはすべてのstateを初期化
             onClose={() => setState({
               ...state,
               isOpenOrderDialog: false,
+              selectedFood: null,
+              selectedFoodCount: 1,
             })}
           />
+      }
+
+      {
+        state.isOpenNewOrderDialog &&
+        <NewOrderConfirmDialog
+          isOpen={state.isOpenNewOrderDialog}
+          onClose={() => setState({ ...state, isOpenNewOrderDialog: false })}
+          existingRestaurantName={state.existingRestaurantName}
+          newRestaurantName={state.newRestaurantName}
+          onClickSubmit={() => replaceOrder()}
+        />
       }
     </Fragment>
   )
